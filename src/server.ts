@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import {Application, Request, Response, NextFunction, Errback} from "express";
 
 (async () => {
 
@@ -33,15 +34,22 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   
   // Root Endpoint
   // Displays a simple message to the user
-  app.get( "/", async ( req, res ) => {
+  app.get( "/", async ( req: Request, res: Response ) => {
     res.send("try GET /filteredimage?image_url={{}}")
   } );
 
-  app.get( "/filteredimage", async ( req, res ) => {
-    const image_path = await filterImageFromURL(req.query.image_url);
-    res.sendFile(image_path, () => {
-      deleteLocalFiles([image_path])
-    });
+  app.get( "/filteredimage", async (req: Request, res: Response) => {
+    const image_url: string = req.query.image_url as string;
+      filterImageFromURL(image_url).then(
+        (image_path : string) => {
+          res.status(200).sendFile(image_path, () => {
+            deleteLocalFiles([image_path])
+          });
+        },
+        (Error) => {
+          res.status(404).send('Error: '+ Error.message +'  Image URL invalid !!');
+        }
+      )
   } );
   
 
